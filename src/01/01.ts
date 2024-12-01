@@ -14,9 +14,7 @@ export function partOne(input: Input) {
 
 export function partTwo(input: Input) {
   const [f, s] = input
-  const sCounts = s.reduce((acc: Record<string, number>, val) => {
-    acc[val] = (acc[val] ?? 0) + 1
-    return acc
-  }, {})
+  let sCounts: Record<string, number> = {}
+  s.forEach(val => (sCounts[val] = (sCounts[val] ?? 0) + 1))
   return sum(f.map(n => n * (sCounts[n] ?? 0)))
 }
