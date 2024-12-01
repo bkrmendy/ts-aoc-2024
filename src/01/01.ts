@@ -14,5 +14,9 @@ export function partOne(input: Input) {
 
 export function partTwo(input: Input) {
   const [f, s] = input
-  return sum(f.map(n => n * s.filter(nn => nn === n).length))
+  const sCounts = s.reduce((acc: Record<string, number>, val) => {
+    acc[val] = (acc[val] ?? 0) + 1
+    return acc
+  }, {})
+  return sum(f.map(n => n * (sCounts[n] ?? 0)))
 }
