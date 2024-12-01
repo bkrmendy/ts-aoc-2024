@@ -54,3 +54,26 @@ export function chunks<T>(arr: T[], size: number): T[][] {
   }
   return result
 }
+
+export function gcd(a: number, b: number): number {
+  if (b === 0) {
+    return a
+  }
+  return gcd(b, a % b)
+}
+
+export function lcm(a: number, b: number) {
+  return (a * b) / gcd(a, b)
+}
+
+export function unsafeGet<T>(from: Record<string, T>, key: string): T {
+  const value = from[key]
+  if (value == null) {
+    throw new Error(`Key not found: ${key}`)
+  }
+  return value
+}
+
+export function div(a: number, b: number): number {
+  return Math.round(a / b)
+}
