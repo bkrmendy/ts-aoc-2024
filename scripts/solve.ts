@@ -23,8 +23,9 @@ const inputPath: string = argv.find(arg => arg === '-e' || arg === '--example')
 const { default: input } = await import(inputPath)
 const { partOne, partTwo, parse } = await import(`@/${name}/${name}.ts`)
 
-const [one, onePerformance] = withPerformance(() => partOne?.(parse(input)))
-const [two, twoPerformance] = withPerformance(() => partTwo?.(parse(input)))
+const parsed = parse(input)
+const [one, onePerformance] = withPerformance(() => partOne?.(parsed))
+const [two, twoPerformance] = withPerformance(() => partTwo?.(parsed))
 
 console.log(
   '🌲',
