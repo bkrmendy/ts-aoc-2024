@@ -1,40 +1,72 @@
 import { lines, words, zip } from '@/advent'
 
+interface Diff {
+  next: number
+  skip: number | null
+}
+
 export function parse(input: string) {
   return lines(input).map(l => words(l).map(Number))
 }
 
+function diffs(values: number[]): Diff[] {
+  const diffs: Diff[] = []
+  for (const [i, v] of values.entries()) {
+    const next = values.at(i + 1)
+    if (next == null) {
+      continue
+    }
+    const oneAfterNext = values.at(i + 2)
+    diffs.push({
+      next: v - next,
+      skip: oneAfterNext == null ? null : v - oneAfterNext
+    })
+  }
+  return diffs
+}
+
 type Input = ReturnType<typeof parse>
 
-function safe(seq: number[]): boolean {
-  const diffs = [...zip(seq, seq.slice(1))].map(([a, b]) => a - b)
-  const safe =
-    diffs.every(dd => 1 <= dd && dd < 4) ||
-    diffs.every(dd => -3 <= dd && dd < 0)
-  return safe
+const DELTAS = {
+  up: [1, 2, 3],
+  down: [-1, -2, -3]
+}
+
+function check(diffs: Diff[], canSkip: boolean, dir: 'up' | 'down'): boolean {
+  const [delta, ...rest] = diffs
+
+  if (delta == null) {
+    // we reached the end
+    return true
+  }
+
+  const deltas = DELTAS[dir]
+
+  if (deltas.includes(delta.next)) {
+    return check(rest, canSkip, dir)
+  }
+
+  if (canSkip && delta.skip != null && deltas.includes(delta.skip)) {
+    return check(rest.slice(1), false, dir)
+  }
+
+  if (canSkip && delta.skip == null) {
+    return true
+  }
+
+  return false
 }
 
 export function partOne(input: Input) {
-  return input.filter(safe).length
-}
-
-function* variants(line: number[]): Iterable<number[]> {
-  yield line
-
-  for (let i = 0; i < line.length; i++) {
-    yield [...line.slice(0, i), ...line.slice(i + 1)]
-  }
+  return input.filter(nums => {
+    const deltas = diffs(nums)
+    return check(deltas, false, 'up') || check(deltas, false, 'down')
+  }).length
 }
 
 export function partTwo(input: Input) {
-  let total = 0
-  for (const line of input) {
-    for (const variant of variants(line)) {
-      if (safe(variant)) {
-        total += 1
-        break
-      }
-    }
-  }
-  return total
+  return input.filter(nums => {
+    const deltas = diffs(nums)
+    return check(deltas, true, 'up') || check(deltas, true, 'down')
+  }).length
 }
