@@ -27,14 +27,11 @@ function* variants(line: number[]): Iterable<number[]> {
 }
 
 export function partTwo(input: Input) {
-  let total = 0
-  for (const line of input) {
+  return input.filter(line => {
     for (const variant of variants(line)) {
       if (safe(variant)) {
-        total += 1
-        break
+        return true
       }
     }
-  }
-  return total
+  }).length
 }
