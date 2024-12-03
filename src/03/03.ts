@@ -1,10 +1,10 @@
 import { pipe } from 'effect'
 import { sum } from '../advent'
 
-type ParseResult<T> = [T, string[]]
+type ParseResult<T> = [T, string]
 
 function matchToken(
-  letters: string[],
+  letters: string,
   token: string
 ): ParseResult<string> | null {
   if ([...token].every((l, i) => letters.at(i) === l)) {
@@ -13,7 +13,7 @@ function matchToken(
   return null
 }
 
-function matchNumber(letters: string[]): ParseResult<number> | null {
+function matchNumber(letters: string): ParseResult<number> | null {
   let nums = ''
   while (letters.length > 0 && !isNaN(parseInt(letters[0]!))) {
     nums += letters[0]
@@ -22,7 +22,7 @@ function matchNumber(letters: string[]): ParseResult<number> | null {
   return nums.length > 0 ? [parseInt(nums), letters] : null
 }
 
-function matchExpr(letters: string[]): [number, number, string[]] | null {
+function matchExpr(letters: string): [number, number, string] | null {
   const open = matchToken(letters, '(')
   if (open == null) {
     return null
@@ -50,14 +50,20 @@ function matchExpr(letters: string[]): [number, number, string[]] | null {
 
 type Input = ReturnType<typeof parse>
 
-function parsePt1(input: string): [number, number][] {
-  return [...input.matchAll(/mul\((\d+),(\d+)\)/g)].map(([_, a, b]) => [
-    parseInt(a!),
-    parseInt(b!)
-  ])
+function parsePt1(letters: string): [number, number][] {
+  const mul = matchToken(letters, 'mul')
+  if (mul != null) {
+    const expr = matchExpr(mul[1])
+    if (expr != null) {
+      return [[expr[0], expr[1]], ...parsePt1(expr[2])]
+    }
+  }
+  if (letters.length === 0) return []
+
+  return parsePt1(letters.slice(1))
 }
 
-function parsePt2(letters: string[], enabled: boolean): [number, number][] {
+function parsePt2(letters: string, enabled: boolean): [number, number][] {
   const dont = matchToken(letters, "don't")
   if (dont != null) {
     return parsePt2(dont[1], false)
@@ -89,5 +95,5 @@ export function partOne(input: Input) {
 }
 
 export function partTwo(input: Input) {
-  return pipe(input, i => parsePt2([...i], true), doMuls, sum)
+  return pipe(input, i => parsePt2(i, true), doMuls, sum)
 }
