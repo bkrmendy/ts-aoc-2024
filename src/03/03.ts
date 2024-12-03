@@ -5,38 +5,14 @@ interface ParseResult<T> {
   rest: string[]
 }
 
-function matchMul(letters: string[]): ParseResult<[number, number]> | null {
-  const [m, u, l, ...rest] = letters
-  if (m !== 'm' || u !== 'u' || l !== 'l') {
-    return null
-  }
-  return { value: [parseInt(m), parseInt(u)], rest }
-}
-
-function matchDo(letters: string[]): ParseResult<'do'> | null {
-  const [d, o, ...rest] = letters
-  if (d !== 'd' || o !== 'o') {
-    return null
-  }
-  return { value: 'do', rest }
-}
-
-function matchDont(letters: string[]): ParseResult<"don't"> | null {
-  const [d, o, n, apo, t, ...rest] = letters
-  if (d !== 'd' || o !== 'o' || n !== 'n' || apo !== "'" || t !== 't') {
-    return null
-  }
-  return { value: "don't", rest }
-}
-
-function matchChar(
+function matchToken(
   letters: string[],
-  char: string
+  token: string
 ): ParseResult<string> | null {
-  if (letters[0] !== char) {
-    return null
+  if ([...token].every((l, i) => letters.at(i) === l)) {
+    return { value: token, rest: letters.slice(token.length) }
   }
-  return { value: char, rest: letters.slice(1) }
+  return null
 }
 
 function matchNumber(letters: string[]): ParseResult<number> | null {
@@ -49,7 +25,7 @@ function matchNumber(letters: string[]): ParseResult<number> | null {
 }
 
 function matchExpr(letters: string[]): [number, number, string[]] | null {
-  const open = matchChar(letters, '(')
+  const open = matchToken(letters, '(')
   if (open == null) {
     return null
   }
@@ -58,7 +34,7 @@ function matchExpr(letters: string[]): [number, number, string[]] | null {
     return null
   }
   const { value: num } = n
-  const comma = matchChar(n.rest, ',')
+  const comma = matchToken(n.rest, ',')
   if (comma == null) {
     return null
   }
@@ -67,46 +43,50 @@ function matchExpr(letters: string[]): [number, number, string[]] | null {
     return null
   }
   const { value: num2 } = nn
-  const close = matchChar(nn.rest, ')')
+  const close = matchToken(nn.rest, ')')
   if (close == null) {
     return null
   }
   return [num, num2, close.rest]
 }
 
-function parseI(letters: string[], enabled: boolean): [number, number][] {
-  const dont = matchDont(letters)
+type Input = ReturnType<typeof parse>
+
+function parsePt1(input: string) {
+  return [...input.matchAll(/mul\((\d+),(\d+)\)/g)]
+}
+
+function parsePt2(letters: string[], enabled: boolean): [number, number][] {
+  const dont = matchToken(letters, "don't")
   if (dont != null) {
-    return parseI(dont.rest, false)
+    return parsePt2(dont.rest, false)
   }
-  const doit = matchDo(letters)
+  const doit = matchToken(letters, 'do')
   if (doit != null) {
-    return parseI(doit.rest, true)
+    return parsePt2(doit.rest, true)
   }
-  const mul = matchMul(letters)
+  const mul = matchToken(letters, 'mul')
   if (enabled && mul != null) {
     const expr = matchExpr(mul.rest)
     if (expr != null) {
-      return [[expr[0], expr[1]], ...parseI(expr[2], enabled)]
+      return [[expr[0], expr[1]], ...parsePt2(expr[2], enabled)]
     }
   }
   if (letters.length === 0) return []
 
-  return parseI(letters.slice(1), enabled)
+  return parsePt2(letters.slice(1), enabled)
 }
 
 export function parse(input: string): string {
   return input
 }
 
-type Input = ReturnType<typeof parse>
-
 export function partOne(input: Input) {
-  const matches = [...input.matchAll(/mul\((\d+),(\d+)\)/g)]
+  const matches = parsePt1(input)
   return sum(matches.map(([_, a, b]) => parseInt(a!) * parseInt(b!)))
 }
 
 export function partTwo(input: Input) {
-  const muls = parseI(input.split(''), true)
+  const muls = parsePt2(input.split(''), true)
   return sum(muls.map(([a, b]) => a * b))
 }
