@@ -1,5 +1,5 @@
 import { pipe } from 'effect'
-import { sum } from '../advent'
+import { curry, sum } from '../advent'
 
 type ParseResult<T> = [T, string]
 
@@ -63,25 +63,25 @@ function parsePt1(letters: string): [number, number][] {
   return parsePt1(letters.slice(1))
 }
 
-function parsePt2(letters: string, enabled: boolean): [number, number][] {
+function parsePt2(enabled: boolean, letters: string): [number, number][] {
   const dont = matchToken(letters, "don't")
   if (dont != null) {
-    return parsePt2(dont[1], false)
+    return parsePt2(false, dont[1])
   }
   const doit = matchToken(letters, 'do')
   if (doit != null) {
-    return parsePt2(doit[1], true)
+    return parsePt2(true, doit[1])
   }
   const mul = matchToken(letters, 'mul')
   if (enabled && mul != null) {
     const expr = matchExpr(mul[1])
     if (expr != null) {
-      return [[expr[0], expr[1]], ...parsePt2(expr[2], enabled)]
+      return [[expr[0], expr[1]], ...parsePt2(enabled, expr[2])]
     }
   }
   if (letters.length === 0) return []
 
-  return parsePt2(letters.slice(1), enabled)
+  return parsePt2(enabled, letters.slice(1))
 }
 
 export function parse(input: string): string {
@@ -95,5 +95,5 @@ export function partOne(input: Input) {
 }
 
 export function partTwo(input: Input) {
-  return pipe(input, i => parsePt2(i, true), doMuls, sum)
+  return pipe(input, curry(parsePt2)(true), doMuls, sum)
 }

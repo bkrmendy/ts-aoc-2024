@@ -77,3 +77,8 @@ export function unsafeGet<T>(from: Record<string, T>, key: string): T {
 export function div(a: number, b: number): number {
   return Math.round(a / b)
 }
+
+export function curry<T, U, V>(fn: (a: T, b: U) => V) {
+  return (a: T) => (b: U) => fn(a, b)
+}
+
