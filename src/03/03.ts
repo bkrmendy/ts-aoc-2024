@@ -1,61 +1,60 @@
-import { pipe } from 'effect'
+import { pipe, Option } from 'effect'
 import { curry, sum } from '../advent'
 
-type ParseResult<T> = [T, string]
+type ParseResult<T> = Option.Option<[T, string]>
 
-function matchToken(
-  letters: string,
-  token: string
-): ParseResult<string> | null {
+function matchToken(letters: string, token: string): ParseResult<string> {
   if ([...token].every((l, i) => letters.at(i) === l)) {
-    return [token, letters.slice(token.length)]
+    return Option.some([token, letters.slice(token.length)])
   }
-  return null
+  return Option.none()
 }
 
-function matchNumber(letters: string): ParseResult<number> | null {
+function matchNumber(letters: string): ParseResult<number> {
   let nums = ''
   while (letters.length > 0 && !isNaN(parseInt(letters[0]!))) {
     nums += letters[0]
     letters = letters.slice(1)
   }
-  return nums.length > 0 ? [parseInt(nums), letters] : null
+  return nums.length > 0
+    ? Option.some([parseInt(nums), letters])
+    : Option.none()
 }
 
-function matchExpr(letters: string): [number, number, string] | null {
-  const open = matchToken(letters, '(')
+function matchExpr(letters: string): ParseResult<[number, number]> {
+  const open = Option.getOrNull(matchToken(letters, '('))
   if (open == null) {
-    return null
+    return Option.none()
   }
-  const n = matchNumber(open[1])
+  const n = Option.getOrNull(matchNumber(open[1]))
   if (n == null) {
-    return null
+    return Option.none()
   }
   const [num, commaRest] = n
-  const comma = matchToken(commaRest, ',')
+  const comma = Option.getOrNull(matchToken(commaRest, ','))
   if (comma == null) {
-    return null
+    return Option.none()
   }
-  const nn = matchNumber(comma[1])
+  const nn = Option.getOrNull(matchNumber(comma[1]))
   if (nn == null) {
-    return null
+    return Option.none()
   }
   const [num2, closeRest] = nn
-  const close = matchToken(closeRest, ')')
+  const close = Option.getOrNull(matchToken(closeRest, ')'))
   if (close == null) {
-    return null
+    return Option.none()
   }
-  return [num, num2, close[1]]
+  return Option.some([[num, num2], close[1]])
 }
 
 type Input = ReturnType<typeof parse>
 
 function parsePt1(letters: string): [number, number][] {
-  const mul = matchToken(letters, 'mul')
+  const mul = Option.getOrNull(matchToken(letters, 'mul'))
   if (mul != null) {
-    const expr = matchExpr(mul[1])
+    const expr = Option.getOrNull(matchExpr(mul[1]))
     if (expr != null) {
-      return [[expr[0], expr[1]], ...parsePt1(expr[2])]
+      return [expr[0], ...parsePt1(expr[1])]
     }
   }
   if (letters.length === 0) return []
@@ -64,19 +63,19 @@ function parsePt1(letters: string): [number, number][] {
 }
 
 function parsePt2(enabled: boolean, letters: string): [number, number][] {
-  const dont = matchToken(letters, "don't")
+  const dont = Option.getOrNull(matchToken(letters, "don't"))
   if (dont != null) {
     return parsePt2(false, dont[1])
   }
-  const doit = matchToken(letters, 'do')
+  const doit = Option.getOrNull(matchToken(letters, 'do'))
   if (doit != null) {
     return parsePt2(true, doit[1])
   }
-  const mul = matchToken(letters, 'mul')
+  const mul = Option.getOrNull(matchToken(letters, 'mul'))
   if (enabled && mul != null) {
-    const expr = matchExpr(mul[1])
+    const expr = Option.getOrNull(matchExpr(mul[1]))
     if (expr != null) {
-      return [[expr[0], expr[1]], ...parsePt2(enabled, expr[2])]
+      return [expr[0], ...parsePt2(enabled, expr[1])]
     }
   }
   if (letters.length === 0) return []
