@@ -6,8 +6,7 @@ export function parse(input: string) {
 
 type Input = ReturnType<typeof parse>
 
-const get = (input: Input, [row, col]: [number, number]) =>
-  input.at(row)?.at(col)
+const get = (input: Input, [row, col]: [number, number]) => input[row]?.[col]
 
 function getNWithStep(
   input: Input,
@@ -47,7 +46,6 @@ function points(input: Input) {
   )
 }
 
-// TODO: not the right answer
 export function partOne(input: Input) {
   return sum(points(input).map(([r, c]) => XMASCount(input, [r, c])))
 }
