@@ -82,3 +82,6 @@ export function curry<T, U, V>(fn: (a: T, b: U) => V) {
   return (a: T) => (b: U) => fn(a, b)
 }
 
+export function transpose<T>(input: T[][]): T[][] {
+  return input[0]!.map((_, colIndex) => input.map(row => row[colIndex]!))
+}
