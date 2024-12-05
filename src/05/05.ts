@@ -1,4 +1,5 @@
 import { lines, sum } from '@/advent'
+import { Array, pipe } from 'effect'
 
 export function parse(input: string): [[number, number][], number[][]] {
   const [por, pp] = input.split('\n\n')
@@ -14,11 +15,11 @@ type Input = ReturnType<typeof parse>
 
 function correctlyOrdered(por: [number, number][], p: number[]): boolean {
   return p.every((n, i) => {
-    const after = por.filter(([b, a]) => b === n).map(([_, a]) => a)
-    const before = por.filter(([b, a]) => a === n).map(([b]) => b)
+    const after = por.filter(_ => _[0] === n).map(_ => _[1])
+    const before = por.filter(_ => _[1] === n).map(_ => _[0])
 
-    const elementsAfter = p.slice(i + 1).every(e => after.includes(e))
-    const elementsBefore = p.slice(0, i).every(e => before.includes(e))
+    const elementsAfter = p.slice(i + 1).every(_ => after.includes(_))
+    const elementsBefore = p.slice(0, i).every(_ => before.includes(_))
 
     return elementsAfter && elementsBefore
   })
@@ -43,31 +44,28 @@ const ordering =
       return AFTER
     }
 
-    throw new Error(`x: ${a}, ${b}`)
+    throw new Error(`ordering not found: ${a}, ${b}`)
   }
 
 function correctlyOrder(por: [number, number][], p: number[]): number[] {
   return p.sort(ordering(por))
 }
 
-export function partOne(input: Input) {
-  const [por, pp] = input
-  return sum(
-    pp
-      .filter(p => correctlyOrdered(por, p))
-      .map(p => p[Math.floor(p.length / 2)]!)
+export function partOne([por, pp]: Input) {
+  return pipe(
+    pp,
+    Array.filter(p => correctlyOrdered(por, p)),
+    Array.map(p => p[Math.floor(p.length / 2)]!),
+    sum
   )
 }
 
-export function partTwo(input: Input) {
-  const [por, pp] = input
-  return sum(
-    pp
-      .filter(p => !correctlyOrdered(por, p))
-      .map(p => correctlyOrder(por, p))
-      .map(p => {
-        console.log(p)
-        return p[Math.floor(p.length / 2)]!
-      })
+export function partTwo([por, pp]: Input) {
+  return pipe(
+    pp,
+    Array.filter(p => !correctlyOrdered(por, p)),
+    Array.map(p => correctlyOrder(por, p)),
+    Array.map(p => p[Math.floor(p.length / 2)]!),
+    sum
   )
 }
