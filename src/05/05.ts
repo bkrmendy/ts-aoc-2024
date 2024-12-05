@@ -1,22 +1,35 @@
 import { lines, sum } from '@/advent'
 import { Array, pipe } from 'effect'
 
-export function parse(input: string): [[number, number][], number[][]] {
+interface Ordering {
+  [n: number]: { before: number[]; after: number[] }
+}
+
+export function parse(input: string): [Ordering, number[][]] {
   const [por, pp] = input.split('\n\n')
-  const porParsed = lines(por!).map((l): [number, number] => {
-    const [b, a] = l.split('|')
-    return [Number(b!), Number(a!)]
+  let ordering: Ordering = {}
+  lines(por!).forEach(l => {
+    const [before, after] = l.split('|').map(Number)
+    if (ordering[before!] == null) {
+      ordering[before!] = { before: [], after: [] }
+    }
+    ordering[before!]!.after.push(after!)
+
+    if (ordering[after!] == null) {
+      ordering[after!] = { before: [], after: [] }
+    }
+    ordering[after!]!.before.push(before!)
   })
+
   const ppParsed = lines(pp!).map(l => l.split(',').map(Number))
-  return [porParsed, ppParsed]
+  return [ordering, ppParsed]
 }
 
 type Input = ReturnType<typeof parse>
 
-function correctlyOrdered(por: [number, number][], p: number[]): boolean {
+function correctlyOrdered(ordering: Ordering, p: number[]): boolean {
   return p.every((n, i) => {
-    const after = por.filter(_ => _[0] === n).map(_ => _[1])
-    const before = por.filter(_ => _[1] === n).map(_ => _[0])
+    const { before, after } = ordering[n]!
 
     const elementsAfter = p.slice(i + 1).every(_ => after.includes(_))
     const elementsBefore = p.slice(0, i).every(_ => before.includes(_))
@@ -30,41 +43,37 @@ const EQ = 0
 const AFTER = 1
 
 const ordering =
-  (por: [number, number][]) =>
+  (ordering: Ordering) =>
   (a: number, b: number): number => {
     if (a === b) {
       return EQ
     }
 
-    if (por.some(([bef, aft]) => bef === a && aft === b)) {
+    if (ordering[a]?.after.includes(b) || ordering[b]?.before.includes(a)) {
       return BEFORE
     }
 
-    if (por.some(([bef, aft]) => bef === b && aft === a)) {
+    if (ordering[a]?.before.includes(b) || ordering[b]?.after.includes(a)) {
       return AFTER
     }
 
     throw new Error(`ordering not found: ${a}, ${b}`)
   }
 
-function correctlyOrder(por: [number, number][], p: number[]): number[] {
-  return p.sort(ordering(por))
-}
-
-export function partOne([por, pp]: Input) {
+export function partOne([ordering, pp]: Input) {
   return pipe(
     pp,
-    Array.filter(p => correctlyOrdered(por, p)),
+    Array.filter(p => correctlyOrdered(ordering, p)),
     Array.map(p => p[Math.floor(p.length / 2)]!),
     sum
   )
 }
 
-export function partTwo([por, pp]: Input) {
+export function partTwo([o, pp]: Input) {
   return pipe(
     pp,
-    Array.filter(p => !correctlyOrdered(por, p)),
-    Array.map(p => correctlyOrder(por, p)),
+    Array.filter(p => !correctlyOrdered(o, p)),
+    Array.map(p => p.sort(ordering(o))),
     Array.map(p => p[Math.floor(p.length / 2)]!),
     sum
   )
