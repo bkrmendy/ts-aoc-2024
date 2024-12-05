@@ -85,3 +85,7 @@ export function curry<T, U, V>(fn: (a: T, b: U) => V) {
 export function transpose<T>(input: T[][]): T[][] {
   return input[0]!.map((_, colIndex) => input.map(row => row[colIndex]!))
 }
+
+export function numericArrayEqual(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((e, i) => b.at(i)! === e)
+}
