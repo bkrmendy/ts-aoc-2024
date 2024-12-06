@@ -1,5 +1,6 @@
 import { lines } from '@/advent'
 import { Facing, fromKey, Position, step, toKey, turnRight } from '@/move2d'
+import { identity } from 'effect';
 
 export function parse(input: string) {
   return lines(input).map(l => [...l])
@@ -47,15 +48,12 @@ export function partOne(input: Input) {
 export function partTwo(input: Input) {
   const start = findStart(input)
   const { positions } = route(input, start)
-  let os: Set<string> = new Set()
+  let loops: boolean[] = []
   for (const position of positions) {
-    const o = input[position.r]![position.c]!
     input[position.r]![position.c]! = '#'
     const { looped } = route(input, start)
-    if (looped) {
-      os.add(toKey(position))
-    }
-    input[position.r]![position.c]! = o
+    loops.push(looped)
+    input[position.r]![position.c]! = '.'
   }
-  return os.size
+  return loops.filter(identity).length
 }
