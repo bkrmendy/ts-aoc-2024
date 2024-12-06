@@ -1,36 +1,11 @@
 import { lines } from '@/advent'
-
-interface Position {
-  r: number
-  c: number
-}
-
-interface Facing {
-  h: number
-  v: number
-}
-
-const turn = ({ v, h }: Facing): Facing => ({
-  v: h,
-  h: -v
-})
-
-const step = (position: Position, facing: Facing): Position => ({
-  r: position.r + facing.v,
-  c: position.c + facing.h
-})
+import { Facing, fromKey, Position, step, toKey, turnRight } from '@/move2d'
 
 export function parse(input: string) {
   return lines(input).map(l => [...l])
 }
 
 type Input = ReturnType<typeof parse>
-
-const toKey = ({ r, c }: Position): string => `${r}-${c}`
-const fromKey = (key: string): Position => {
-  const [r, c] = key.split('-')
-  return { r: parseInt(r!), c: parseInt(c!) }
-}
 
 function route(
   input: Input,
@@ -49,7 +24,7 @@ function route(
       looped = true
       running = false
     } else if (input[ahead.r]?.[ahead.c] === '#') {
-      facing = turn(facing)
+      facing = turnRight(facing)
     } else {
       places[toKey(ahead)] = (places[toKey(ahead)] ?? 0) + 1
       position = ahead
