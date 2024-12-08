@@ -1,4 +1,5 @@
-import { lines, sum, words, zip } from '@/advent'
+import { lines, sum, words } from '@/advent'
+import { pipe, Array } from 'effect'
 
 export function parse(input: string): [number[], number[]] {
   const rows = lines(input).map(l => words(l).map(Number))
@@ -9,7 +10,11 @@ type Input = ReturnType<typeof parse>
 
 export function partOne(input: Input) {
   const [f, s] = input
-  return sum([...zip(f, s)].map(([a, b]) => Math.abs(a - b)))
+  return pipe(
+    Array.zip(f, s),
+    Array.map(([a, b]) => Math.abs(a - b)),
+    sum
+  )
 }
 
 export function partTwo(input: Input) {

@@ -1,5 +1,5 @@
-import { curry, lines, pairs, zip } from '@/advent'
-import { fromKey, Position, positionsEqual, toKey } from '@/move2d'
+import { curry, lines, pairs } from '@/advent'
+import { Position, positionsEqual } from '@/move2d'
 import { pipe, Array } from 'effect'
 
 export function parse(input: string) {

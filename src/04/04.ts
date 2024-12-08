@@ -1,4 +1,5 @@
 import { lines, range, sum } from '@/advent'
+import { pipe, Array } from 'effect'
 
 export function parse(input: string) {
   return lines(input).map(i => [...i])

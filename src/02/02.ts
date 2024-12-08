@@ -1,4 +1,5 @@
-import { lines, words, zip } from '@/advent'
+import { lines, words } from '@/advent'
+import { Array, pipe } from 'effect'
 
 export function parse(input: string) {
   return lines(input).map(l => words(l).map(Number))
@@ -7,7 +8,10 @@ export function parse(input: string) {
 type Input = ReturnType<typeof parse>
 
 function safe(seq: number[]): boolean {
-  const diffs = [...zip(seq, seq.slice(1))].map(([a, b]) => a - b)
+  const diffs = pipe(
+    Array.zip(seq, seq.slice(1)),
+    Array.map(([a, b]) => a - b)
+  )
   const safe =
     diffs.every(dd => 1 <= dd && dd < 4) ||
     diffs.every(dd => -3 <= dd && dd < 0)

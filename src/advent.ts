@@ -1,3 +1,5 @@
+import { Array } from 'effect'
+
 export const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0)
 export const product = (ns: number[]) => ns.reduce((a, b) => a * b, 1)
 
@@ -28,15 +30,8 @@ export function* matchAll(s: string, re: RegExp): Iterable<RegExpExecArray> {
   }
 }
 
-export function intersection(a: Set<any>, b: Set<any>) {
+export function intersection<T>(a: Set<T>, b: Set<T>) {
   return new Set([...a].filter(x => b.has(x)))
-}
-
-export function* zip<T, U>(a: T[], b: U[]): Iterable<[T, U]> {
-  const length = Math.min(a.length, b.length)
-  for (let i = 0; i < length; i++) {
-    yield [a.at(i)!, b.at(i)!]
-  }
 }
 
 export function maximum(numbers: number[]) {
