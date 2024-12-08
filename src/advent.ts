@@ -89,3 +89,11 @@ export function transpose<T>(input: T[][]): T[][] {
 export function numericArrayEqual(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((e, i) => b.at(i)! === e)
 }
+
+export function* pairs<T>(ts: T[]): Iterable<[T, T]> {
+  for (let i = 0; i < ts.length; i++) {
+    for (let j = i + 1; j < ts.length; j++) {
+      yield [ts.at(i)!, ts.at(j)!]
+    }
+  }
+}

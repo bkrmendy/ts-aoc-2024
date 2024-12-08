@@ -28,3 +28,6 @@ export const fromKey = (key: string): Position => {
   const [r, c] = key.split('-')
   return { r: parseInt(r!), c: parseInt(c!) }
 }
+
+export const positionsEqual = (p1: Position, p2: Position): boolean =>
+  p1.r === p2.r && p1.c === p2.c
