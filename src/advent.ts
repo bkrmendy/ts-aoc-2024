@@ -1,5 +1,3 @@
-import { Array } from 'effect'
-
 export const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0)
 export const product = (ns: number[]) => ns.reduce((a, b) => a * b, 1)
 
@@ -40,14 +38,6 @@ export function maximum(numbers: number[]) {
 
 export function minimum(numbers: number[]) {
   return Math.min(...numbers)
-}
-
-export function chunks<T>(arr: T[], size: number): T[][] {
-  let result: T[][] = []
-  for (let i = 0; i < arr.length; i += size) {
-    result.push(arr.slice(i, i + size))
-  }
-  return result
 }
 
 export function gcd(a: number, b: number): number {
