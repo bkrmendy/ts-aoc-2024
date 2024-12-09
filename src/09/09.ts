@@ -11,7 +11,8 @@ interface Block {
 }
 
 const ppt1 =
-  (makeBlocks: (id: number, space: number) => Block[]) => (ns: number[]) => {
+  <T>(makeBlocks: (id: number, space: number) => T[]) =>
+  (ns: number[]) => {
     return ns.map(Number).flatMap((n, i) => {
       const isFree = i % 2 === 1
       const id = isFree ? -1 : i / 2
@@ -32,16 +33,16 @@ function moveInto(freeSpace: number, block: Block): Block[] {
   return [block, { id: -3, space: remainingSpace }]
 }
 
-function rearrage1(blocks: Block[]): Block[] {
+function rearrage1(blocks: number[]): number[] {
   let working = [...blocks]
-  let firstSlotIdx = findIndexFrom(0, blocks, s => s.id < 0)!
-  let lastFileIdx = findLastIndexFrom(working.length - 1, blocks, s => s.id >= 0)!
+  let firstSlotIdx = findIndexFrom(0, blocks, s => s < 0)!
+  let lastFileIdx = findLastIndexFrom(working.length - 1, blocks, s => s >= 0)!
 
   while (firstSlotIdx < lastFileIdx) {
     working[firstSlotIdx] = working[lastFileIdx]!
-    working[lastFileIdx] = { id: -1, space: 1 }
-    firstSlotIdx = findIndexFrom(firstSlotIdx + 1, blocks, s => s.id < 0)!
-    lastFileIdx = findLastIndexFrom(lastFileIdx - 1, blocks, s => s.id >= 0)!
+    working[lastFileIdx] = -1
+    firstSlotIdx = findIndexFrom(firstSlotIdx + 1, blocks, s => s < 0)!
+    lastFileIdx = findLastIndexFrom(lastFileIdx - 1, blocks, s => s >= 0)!
   }
 
   return working
@@ -77,12 +78,14 @@ function rearrange2(blocks: Block[]): Block[] {
   return remapped
 }
 
-function checksum(ns: Block[]): number {
+const checksumIds = (ids: number[]) =>
+  [...ids.entries()].map(([i, id]) => i * Math.max(id, 0))
+
+function checksumBlocks(ns: Block[]): number {
   return pipe(
     ns,
     Array.flatMap(({ id, space }) => Array.range(1, space).fill(id)),
-    ns => [...ns.entries()],
-    Array.map(([i, id]) => i * Math.max(id, 0)),
+    checksumIds,
     sum
   )
 }
@@ -90,11 +93,10 @@ function checksum(ns: Block[]): number {
 export function partOne(input: Input) {
   return pipe(
     input,
-    ppt1((id, space) =>
-      Array.range(1, space).map(() => ({ id: id, space: 1 }))
-    ),
+    ppt1((id, space) => Array.range(1, space).map(() => id)),
     rearrage1,
-    checksum
+    checksumIds,
+    sum
   )
 }
 
@@ -103,6 +105,6 @@ export function partTwo(input: Input) {
     input,
     ppt1((id, space) => [{ id, space }]),
     rearrange2,
-    checksum
+    checksumBlocks
   )
 }
