@@ -82,3 +82,37 @@ export function* pairs<T>(ts: T[]): Iterable<[T, T]> {
     }
   }
 }
+
+export function findIndexFrom<T>(
+  from: number,
+  ts: T[],
+  predicate: (b: T) => boolean
+): number | null {
+  if (from < 0 || ts.length <= from) {
+    return null
+  }
+  for (let i = from; i < ts.length; i++) {
+    let e = ts[i]
+    if (e != null && predicate(e)) {
+      return i
+    }
+  }
+  return null
+}
+
+export function findLastIndexFrom<T>(
+  from: number,
+  ts: T[],
+  predicate: (b: T) => boolean
+): number | null {
+  if (from < 0 || ts.length <= from) {
+    return null
+  }
+  for (let i = from; i >= 0; i--) {
+    let e = ts[i]
+    if (e != null && predicate(e)) {
+      return i
+    }
+  }
+  return null
+}

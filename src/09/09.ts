@@ -1,4 +1,4 @@
-import { lines, sum } from '@/advent'
+import { findIndexFrom, findLastIndexFrom, lines, sum } from '@/advent'
 import { Array, pipe } from 'effect'
 
 export function parse(input: string): number[] {
@@ -32,8 +32,23 @@ function moveInto(freeSpace: number, block: Block): Block[] {
   return [block, { id: -3, space: remainingSpace }]
 }
 
-function rearrange(ns: Block[]): Block[] {
-  let working = [...ns]
+function rearrage1(blocks: Block[]): Block[] {
+  let working = [...blocks]
+  let firstSlotIdx = findIndexFrom(0, blocks, s => s.id < 0)!
+  let lastFileIdx = findLastIndexFrom(working.length - 1, blocks, s => s.id >= 0)!
+
+  while (firstSlotIdx < lastFileIdx) {
+    working[firstSlotIdx] = working[lastFileIdx]!
+    working[lastFileIdx] = { id: -1, space: 1 }
+    firstSlotIdx = findIndexFrom(firstSlotIdx + 1, blocks, s => s.id < 0)!
+    lastFileIdx = findLastIndexFrom(lastFileIdx - 1, blocks, s => s.id >= 0)!
+  }
+
+  return working
+}
+
+function rearrange2(blocks: Block[]): Block[] {
+  let working = [...blocks]
   let remapped: Block[] = []
 
   while (working.length > 0) {
@@ -78,7 +93,7 @@ export function partOne(input: Input) {
     ppt1((id, space) =>
       Array.range(1, space).map(() => ({ id: id, space: 1 }))
     ),
-    rearrange,
+    rearrage1,
     checksum
   )
 }
@@ -87,7 +102,7 @@ export function partTwo(input: Input) {
   return pipe(
     input,
     ppt1((id, space) => [{ id, space }]),
-    rearrange,
+    rearrange2,
     checksum
   )
 }
