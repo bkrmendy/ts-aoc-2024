@@ -5,55 +5,24 @@ export function parse(input: string): number[] {
   return [...lines(input).at(0)!].map(Number)
 }
 
-function ppt1(ns: number[]) {
-  return ns.map(Number).flatMap((n, i) => {
-    const isFree = i % 2 === 1
-    const id = isFree ? -1 : i / 2
-    if (n == 0) {
-      return []
-    }
-    return Array.range(1, n).fill(id)
-  })
-}
-
 interface Block {
   id: number
   space: number
 }
 
-function ppt2(ns: number[]): Block[] {
-  return ns.map(Number).flatMap((n, i) => {
-    const isFree = i % 2 === 1
-    const id = isFree ? -1 : i / 2
-    if (n == 0) {
-      return []
-    }
-    return { id: id, space: n }
-  })
-}
+const ppt1 =
+  (makeBlocks: (id: number, space: number) => Block[]) => (ns: number[]) => {
+    return ns.map(Number).flatMap((n, i) => {
+      const isFree = i % 2 === 1
+      const id = isFree ? -1 : i / 2
+      if (n == 0) {
+        return []
+      }
+      return makeBlocks(id, n)
+    })
+  }
 
 type Input = ReturnType<typeof parse>
-
-function rearrange(ns: number[]): number[] {
-  let working = [...ns]
-  while (true) {
-    const nextNumber = working.findLastIndex(n => n >= 0)
-    const nextSlot = working.findIndex(n => n < 0)
-    if (nextSlot > nextNumber) {
-      return working
-    }
-    working[nextSlot] = working[nextNumber]!
-    working[nextNumber] = -1
-  }
-}
-
-function checksum(ns: number[]): number {
-  return sum([...ns.entries().map(([i, id]) => i * Math.max(id, 0))])
-}
-
-export function partOne(input: Input) {
-  return pipe(input, ppt1, rearrange, checksum)
-}
 
 function moveInto(freeSpace: number, block: Block): Block[] {
   const remainingSpace = freeSpace - block.space
@@ -63,7 +32,7 @@ function moveInto(freeSpace: number, block: Block): Block[] {
   return [block, { id: -3, space: remainingSpace }]
 }
 
-function rearrange2(ns: Block[]): Block[] {
+function rearrange(ns: Block[]): Block[] {
   let working = [...ns]
   let remapped: Block[] = []
 
@@ -93,25 +62,32 @@ function rearrange2(ns: Block[]): Block[] {
   return remapped
 }
 
-function p(blocks: Block[]) {
-  return blocks
-    .flatMap(({ id, space }) =>
-      Array.range(1, space).map(() => (id < 0 ? '.' : id))
-    )
-    .join('')
+function checksum(ns: Block[]): number {
+  return pipe(
+    ns,
+    Array.flatMap(({ id, space }) => Array.range(1, space).fill(id)),
+    ns => [...ns.entries()],
+    Array.map(([i, id]) => i * Math.max(id, 0)),
+    sum
+  )
 }
 
-function checksum2(ns: Block[]): number {
-  return checksum(
-    ns.flatMap(({ id, space }) => {
-      if (space < 1) {
-        throw new Error(`no space ${id}`)
-      }
-      return Array.range(1, space).fill(id)
-    })
+export function partOne(input: Input) {
+  return pipe(
+    input,
+    ppt1((id, space) =>
+      Array.range(1, space).map(() => ({ id: id, space: 1 }))
+    ),
+    rearrange,
+    checksum
   )
 }
 
 export function partTwo(input: Input) {
-  return pipe(input, ppt2, rearrange2, checksum2)
+  return pipe(
+    input,
+    ppt1((id, space) => [{ id, space }]),
+    rearrange,
+    checksum
+  )
 }
