@@ -10,7 +10,7 @@ interface Block {
   space: number
 }
 
-const ppt1 =
+const parseBlocks =
   <T>(makeBlocks: (id: number, space: number) => T[]) =>
   (ns: number[]) => {
     return ns.map(Number).flatMap((n, i) => {
@@ -68,11 +68,9 @@ function rearrange2(blocks: Block[]): Block[] {
     }
 
     const free = working[nextSlotIdx]!.space
-
-    const pre = working.slice(0, nextSlotIdx)
     const mapped = moveInto(free, last)
-    const rest = working.slice(nextSlotIdx + 1)
-    working = [...pre, ...mapped, ...rest, { space: last.space, id: -2 }]
+    working.splice(nextSlotIdx, 1, ...mapped)
+    working.push({ space: last.space, id: -1 })
   }
 
   return remapped
@@ -93,7 +91,7 @@ function checksumBlocks(ns: Block[]): number {
 export function partOne(input: Input) {
   return pipe(
     input,
-    ppt1((id, space) => Array.range(1, space).map(() => id)),
+    parseBlocks((id, space) => Array.range(1, space).map(() => id)),
     rearrage1,
     checksumIds,
     sum
@@ -103,7 +101,7 @@ export function partOne(input: Input) {
 export function partTwo(input: Input) {
   return pipe(
     input,
-    ppt1((id, space) => [{ id, space }]),
+    parseBlocks((id, space) => [{ id, space }]),
     rearrange2,
     checksumBlocks
   )
