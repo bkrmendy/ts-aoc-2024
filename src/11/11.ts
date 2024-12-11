@@ -1,4 +1,5 @@
 import { memo, sum, words } from '@/advent'
+import { Array, pipe } from 'effect'
 
 export function parse(input: string) {
   return words(input).map(Number)
@@ -34,10 +35,12 @@ const blink = memo(
   }
 )
 
-export function partOne(input: Input) {
-  return sum(input.map(n => blink(25, n)))
-}
+const solve = (times: number) => (input: Input) =>
+  pipe(
+    input,
+    Array.map(n => blink(times, n)),
+    sum
+  )
 
-export function partTwo(input: Input) {
-  return sum(input.map(n => blink(75, n)))
-}
+export const partOne = solve(25)
+export const partTwo = solve(75)
