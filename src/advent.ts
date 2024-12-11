@@ -116,3 +116,20 @@ export function findLastIndexFrom<T>(
   }
   return null
 }
+
+export function memo<Args extends unknown[], U>(
+  toKey: (...args: Args) => string,
+  f: (...args: Args) => U
+): (...args: Args) => U {
+  let cache: Map<string, U> = new Map()
+  return (...args) => {
+    const key = toKey(...args)
+    const entry = cache.get(key)
+    if (entry != null) {
+      return entry
+    }
+    const res = f(...args)
+    cache.set(key, res)
+    return res
+  }
+}
