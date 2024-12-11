@@ -16,7 +16,7 @@ const split = (n: number): [number, number] => {
   return [end, start]
 }
 
-const blinkn = memo(
+const blink = memo(
   (t, s) => `${t}-${s}`,
   (times: number, stone: number): number => {
     if (times === 0) {
@@ -24,20 +24,20 @@ const blinkn = memo(
     }
 
     if (stone === 0) {
-      return blinkn(times - 1, 1)
+      return blink(times - 1, 1)
     }
     if (nDigits(stone) % 2 == 0) {
       let [a, b] = split(stone)
-      return blinkn(times - 1, a) + blinkn(times - 1, b)
+      return blink(times - 1, a) + blink(times - 1, b)
     }
-    return blinkn(times - 1, stone * 2024)
+    return blink(times - 1, stone * 2024)
   }
 )
 
 export function partOne(input: Input) {
-  return sum(input.map(n => blinkn(25, n)))
+  return sum(input.map(n => blink(25, n)))
 }
 
 export function partTwo(input: Input) {
-  return sum(input.map(n => blinkn(75, n)))
+  return sum(input.map(n => blink(75, n)))
 }
