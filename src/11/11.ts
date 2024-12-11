@@ -1,4 +1,4 @@
-import { sum, words } from '@/advent'
+import { memo, sum, words } from '@/advent'
 
 export function parse(input: string) {
   return words(input).map(Number)
@@ -16,46 +16,28 @@ const split = (n: number): [number, number] => {
   return [end, start]
 }
 
-function blinkn(times: number, start: number): number {
-  if (times === 0) {
-    return 1
-  }
-  if (start === 0) {
-    return 1
-  }
-  if (nDigits(start) % 2 == 0) {
-    let [a, b] = split(start)
-    return blinkn(times - 1, a) + blinkn(times - 1, b)
-  }
-  return blinkn(times - 1, start * 2024)
-}
-
-function blink(times: number, start: number[]): number[] {
-  let current = start
-  while (times > 0) {
-    let current2 = []
-    for (let i = current.length - 1; i >= 0; i--) {
-      if (current[i] === 0) {
-        current2.unshift(1)
-      } else if (nDigits(current[i]!) % 2 == 0) {
-        let [a, b] = split(current[i]!)
-        current2.unshift(b)
-        current2.unshift(a)
-      } else {
-        current2.unshift(current[i]! * 2024)
-      }
+const blinkn = memo(
+  (t, s) => `${t}-${s}`,
+  (times: number, stone: number): number => {
+    if (times === 0) {
+      return 1
     }
-    current = current2
-    times -= 1
+
+    if (stone === 0) {
+      return blinkn(times - 1, 1)
+    }
+    if (nDigits(stone) % 2 == 0) {
+      let [a, b] = split(stone)
+      return blinkn(times - 1, a) + blinkn(times - 1, b)
+    }
+    return blinkn(times - 1, stone * 2024)
   }
-  return current
-}
+)
 
 export function partOne(input: Input) {
-  return sum(input.map(n => blinkn(5, n)))
-  // return blink(25, input).length
+  return sum(input.map(n => blinkn(25, n)))
 }
 
 export function partTwo(input: Input) {
-  // return blink(75, input).length
+  return sum(input.map(n => blinkn(75, n)))
 }
