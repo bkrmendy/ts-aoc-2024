@@ -87,80 +87,39 @@ export function partOne(input: Input) {
   return sum(prices)
 }
 
-function chunkByContigious(ns: number[]): number[][] {
-  const [head, ...rest] = ns
-  if (head == null) {
-    return []
-  }
-  let chunks: number[][] = [[head]]
-  for (const n of rest) {
-    if (chunks.at(-1)!.at(-1)! + 1 === n) {
-      chunks.at(-1)!.push(n)
-    } else {
-      chunks.push([n])
-    }
-  }
-  return chunks
-}
-
-function edge(
-  perimeters: Position[],
-  direction: M2D.Facing,
-  included: (_: Position) => boolean,
-  sideToCheck: (_: Position) => number,
-  sideToGroup: (_: Position) => number
-): number {
-  let ps = pipe(
-    perimeters,
-    Array.map(p => M2D.step(p, direction)),
-    Array.filter(p => !included(p))
-  )
-
-  let gs: Map<number, number[]> = new Map()
-  for (const p of ps) {
-    if (!gs.has(sideToGroup(p))) {
-      gs.set(sideToGroup(p), [])
-    }
-    gs.get(sideToGroup(p))!.push(sideToCheck(p))
-  }
-
-  // console.log(gs)
-
-  return sum([...gs.values().map(ps => chunkByContigious(ps.sort()).length)])
-}
-
-function perimeterWBulkDiscount(region: Region, input: Input): number {
-  const included = ({ r, c }: Position) => input[r]?.[c] === region.letter
-
-  const perimeters = region.squares.filter(p =>
-    neighborsViaEdge(p).some(p => !included(p))
-  )
-
-  const column = ({ c }: Position) => c
-  const row = ({ r }: Position) => r
-
-  return (
-    edge(perimeters, M2D.UP, included, column, row) +
-    edge(perimeters, M2D.DOWN, included, column, row) +
-    edge(perimeters, M2D.LEFT, included, row, column) +
-    edge(perimeters, M2D.RIGHT, included, row, column)
-  )
-}
-
 const deltas = [-1, 1] as const
 
-function countCorners(region: Region, input: Input): number {
-  const included = ({ r, c }: Position) => input[r]?.[c] === region.letter
+export const directions2D: [number, number][] = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0]
+]
 
-  const corners = region.squares.filter(p => {
-    let h = deltas.flatMap(dh =>
-      deltas.flatMap(dv => M2D.step(p, { h: dh, v: dv }))
-    )
-  })
-}
+const countCorners = ({ c: x, r: y }: Position, input: Input): number =>
+  [0, 1, 2, 3]
+    .map((d): [[number, number], [number, number]] => [
+      directions2D[d]!,
+      directions2D[(d + 1) % 4]!
+    ])
+    .map(([[dx1, dy1], [dx2, dy2]]) => [
+      input[y]![x]!,
+      input[y + dy1]?.[x + dx1],
+      input[y + dy2]?.[x + dx2],
+      input[y + dy1 + dy2]?.[x + dx1 + dx2]
+    ])
+    .filter(
+      ([plant, left, right, mid]) =>
+        (left !== plant && right !== plant) ||
+        (left === plant && right === plant && mid !== plant)
+    ).length
 
 export function partTwo(input: Input) {
   const regions = findRegions(input)
-  const prices = regions.map(r => area(r) * perimeterWBulkDiscount(r, input))
+  const prices = regions.map(r => {
+    const c = sum(r.squares.map(s => countCorners(s, input)))
+    console.log(r.letter, c)
+    return area(r) * c
+  })
   return sum(prices)
 }
