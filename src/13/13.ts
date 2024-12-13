@@ -27,21 +27,22 @@ function getWinningCost(
   machine: Machine
 ): Option.Option<{ a: number; b: number }> {
   const {
-    a: [AX, AY],
-    b: [BX, BY],
-    prize: [PX, PY]
+    a: [ax, ay],
+    b: [bx, by],
+    prize: [px, py]
   } = machine
-  const determinant = AX * BY - BX * AY
+  const determinant = ax * by - bx * ay
 
   if (determinant === 0) {
     console.log(
       'The determinant is zero, so the equations have no unique solution.'
     )
+    return Option.none()
   }
 
   // Calculate a and b using the rearranged equations
-  const a = (BY * PX - BX * PY) / determinant
-  const b = (-AY * PX + AX * PY) / determinant
+  const a = (by * px - bx * py) / determinant
+  const b = (-ay * px + ax * py) / determinant
 
   if (Number.isInteger(a) && Number.isInteger(b)) {
     return Option.some({ a, b })
