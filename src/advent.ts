@@ -133,3 +133,11 @@ export function memo<Args extends unknown[], U>(
     return res
   }
 }
+
+export const mod = (n: number, m: number) => {
+  let nn = n
+  while (nn <= 0) {
+    nn += m
+  }
+  return nn % m
+}
