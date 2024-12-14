@@ -123,10 +123,7 @@ function edge(
     }
     gs.get(sideToGroup(p))!.push(sideToCheck(p))
   }
-
-  // console.log(gs)
-
-  return sum([...gs.values().map(ps => chunkByContigious(ps.sort()).length)])
+  return sum([...gs.values()].map(ps => chunkByContigious(ps.sort()).length))
 }
 
 function perimeterWBulkDiscount(region: Region, input: Input): number {
