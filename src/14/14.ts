@@ -1,5 +1,5 @@
 import { lines, mod, product, range } from '../advent'
-import { Position, toKey } from '@/move2d'
+import { Position, toKey, step } from '@/move2d'
 
 interface Robot {
   p: Position
@@ -18,65 +18,46 @@ type Input = ReturnType<typeof parse>
 
 const W = 101
 const H = 103
-// const W = 11
-// const H = 7
 
-function move(robot: Robot): Robot {
-  return {
-    vx: robot.vx,
-    vy: robot.vy,
-    p: { r: mod(robot.p.r + robot.vy, H), c: mod(robot.p.c + robot.vx, W) }
-  }
-}
+const move = (robot: Robot): Robot => ({
+  vx: robot.vx,
+  vy: robot.vy,
+  p: { r: mod(robot.p.r + robot.vy, H), c: mod(robot.p.c + robot.vx, W) }
+})
 
-function inQuadrant(from: Position, to: Position, robot: Robot): boolean {
-  return (
-    from.r <= robot.p.r &&
-    robot.p.r < to.r &&
-    from.c <= robot.p.c &&
-    robot.p.c < to.c
-  )
-}
+const inQuadrant = (from: Position, to: Position, robot: Robot): boolean =>
+  from.r <= robot.p.r &&
+  robot.p.r < to.r &&
+  from.c <= robot.p.c &&
+  robot.p.c < to.c
 
-const h = (n: number): [number, number] => [Math.floor(n / 2), Math.ceil(n / 2)]
+const partition = (n: number): [number, number] => [
+  Math.floor(n / 2),
+  Math.ceil(n / 2)
+]
 
-const time = (robots: Robot[], seconds: number): Robot[] => {
-  let result = [...robots]
-  for (const _ of range(0, seconds)) {
-    result = result.map(move)
-  }
-  return result
-}
+const count = (robots: Robot[], from: Position, to: Position): number =>
+  robots.filter(r => inQuadrant(from, to, r)).length
 
 export function partOne(input: Input) {
-  const robots = time(input, 100)
+  let robots = [...input]
+  for (const _ of range(0, 100)) {
+    robots = robots.map(move)
+  }
 
-  const [lhr, uhr] = h(H)
-  const [lhc, uhc] = h(W)
+  const [lowerRow, upperRow] = partition(H)
+  const [lowerCol, upperCol] = partition(W)
 
-  const tl = robots.filter(r =>
-    inQuadrant({ r: 0, c: 0 }, { r: lhr, c: lhc }, r)
-  ).length
-  const tr = robots.filter(r =>
-    inQuadrant({ r: 0, c: uhc }, { r: lhr, c: W }, r)
-  ).length
-  const bl = robots.filter(r =>
-    inQuadrant({ r: uhr, c: 0 }, { r: H, c: lhc }, r)
-  ).length
-  const br = robots.filter(r =>
-    inQuadrant({ r: uhr, c: uhc }, { r: H, c: W }, r)
-  ).length
+  const tl = count(robots, { r: 0, c: 0 }, { r: lowerRow, c: lowerCol })
+  const tr = count(robots, { r: 0, c: upperCol }, { r: lowerRow, c: W })
+  const bl = count(robots, { r: upperRow, c: 0 }, { r: H, c: lowerCol })
+  const br = count(robots, { r: upperRow, c: upperCol }, { r: H, c: W })
 
   return product([tl, tr, bl, br])
 }
 
 function draw(robots: Robot[]) {
   let rs: Map<string, boolean> = new Map()
-  for (const ir of range(0, H)) {
-    for (const ic of range(0, W)) {
-      rs.set(toKey({ r: ir, c: ic }), false)
-    }
-  }
   robots.forEach(r => rs.set(toKey(r.p), true))
 
   let lines = [...range(0, H)]
@@ -92,33 +73,37 @@ function draw(robots: Robot[]) {
   console.log(lines)
 }
 
-function noOverlaps(robots: Robot[]): boolean {
-  let positions: Set<string> = new Set()
-  robots.forEach(r => positions.add(toKey(r.p)))
-  return positions.size === robots.length
-}
+function lowEntropy(robots: Robot[], n: number): boolean {
+  let rs: Map<string, boolean> = new Map()
+  robots.forEach(r => rs.set(toKey(r.p), true))
 
-function getNoOverlaps(robots: Robot[]): Array<[Robot[], number]> {
-  let current = [...robots]
-  let seconds = 0
-  let count = 10
-  let result: [Robot[], number][] = []
-  while (result.length < count) {
-    if (noOverlaps(current)) {
-      result.push([current, seconds])
+  const check = (from: Position): boolean => {
+    for (const p of range(0, n)) {
+      if (!rs.has(toKey(from))) {
+        return false
+      }
+      from = step(from, { h: 0, v: 1 })
     }
-    current = [...current].map(r => move(r))
-    seconds += 1
+    return true
   }
 
-  return result
+  for (const irow of range(0, W)) {
+    for (const icol of range(0, H)) {
+      if (rs.has(toKey({ r: irow, c: icol })) && check({ r: irow, c: icol })) {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 export function partTwo(input: Input) {
-  // const noOverlaps = getNoOverlaps(input)
-  // console.log(noOverlaps.map(a => a[1]))
-  const seconds = 7338
-  let result = time(input, seconds)
-  draw(result)
-  return 0
+  let seconds = 0
+  let robots = [...input]
+  while (!lowEntropy(robots, 7)) {
+    robots = robots.map(move)
+    seconds += 1
+  }
+  draw(robots) // just for fun
+  return seconds
 }
