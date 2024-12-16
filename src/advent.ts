@@ -32,6 +32,11 @@ export function intersection<T>(a: Set<T>, b: Set<T>) {
   return new Set([...a].filter(x => b.has(x)))
 }
 
+export function union<T>(a: Set<T>, b: Set<T>) {
+  b.values().forEach(item => a.add(item))
+  return a
+}
+
 export function maximum(numbers: number[]) {
   return Math.max(...numbers)
 }
