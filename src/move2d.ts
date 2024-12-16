@@ -32,9 +32,14 @@ export const DOWN: Facing = { h: 0, v: 1 }
 export const LEFT: Facing = { h: -1, v: 0 }
 export const RIGHT: Facing = { h: 1, v: 0 }
 
-export const turnRight = ({ v, h }: Facing): Facing => ({
-  v: h,
-  h: -v
+export const turnLeft = ({ v: dr, h: dc }: Facing): Facing => ({
+  v: -dc,
+  h: dr
+})
+
+export const turnRight = ({ v: dr, h: dc }: Facing): Facing => ({
+  v: dc,
+  h: -dr
 })
 
 export const step = (position: Position, facing: Facing): Position => ({
