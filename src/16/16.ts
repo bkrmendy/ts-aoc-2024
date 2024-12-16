@@ -1,4 +1,4 @@
-import { lines, minimum, sum } from '@/advent'
+import { lines, minimum } from '@/advent'
 import {
   Facing,
   Position,
@@ -8,6 +8,7 @@ import {
   turnLeft,
   turnRight
 } from '@/move2d'
+import { pipe, Array } from 'effect'
 
 export function parse(input: string) {
   return lines(input).map(l => [...l])
@@ -40,150 +41,70 @@ interface Step {
 
 function getBestPathScore(start: Position, input: string[][]) {
   let q: Step[] = [{ position: start, facing: RIGHT, score: 0 }]
-  let seen: Set<string> = new Set([toKey(start)])
-
-  let scores: number[] = []
+  let parent: Record<string, [Position, number][]> = {}
 
   while (q.length > 0) {
-    let next = q.shift()
-
-    if (input[next!.position.r]![next!.position.c]! === 'E') {
-      scores.push(next!.score)
+    let current = q.shift()!
+    if (parent[toKey(current.position)] != null) {
       continue
     }
 
-    const ccw = turnLeft(next!.facing)
-    const ccwAndAhead = step(next!.position, ccw)
-    if (
-      input[ccwAndAhead.r]![ccwAndAhead.c] !== '#' &&
-      !seen.has(toKey(ccwAndAhead))
-    ) {
-      seen.add(toKey(ccwAndAhead))
+    parent[toKey(current.position)] = []
+
+    const ccw = turnLeft(current.facing)
+    const ccwAndAhead = step(current.position, ccw)
+    if (input[ccwAndAhead.r]![ccwAndAhead.c] !== '#') {
+      parent[toKey(current.position)]!.push([ccwAndAhead, current.score + 1001])
       q.push({
         position: ccwAndAhead,
         facing: ccw,
-        score: next!.score + 1001
+        score: current.score + 1001
       })
     }
 
-    const cw = turnRight(next!.facing)
-    const cwAndAhead = step(next!.position, cw)
-    if (
-      input[cwAndAhead.r]![cwAndAhead.c] !== '#' &&
-      !seen.has(toKey(cwAndAhead))
-    ) {
-      seen.add(toKey(cwAndAhead))
+    const cw = turnRight(current.facing)
+    const cwAndAhead = step(current.position, cw)
+    if (input[cwAndAhead.r]![cwAndAhead.c] !== '#') {
+      parent[toKey(current.position)]!.push([cwAndAhead, current.score + 1001])
       q.push({
         position: cwAndAhead,
         facing: cw,
-        score: next!.score + 1001
+        score: current.score + 1001
       })
     }
 
-    let ahead = step(next!.position, next!.facing)
-    if (input[ahead.r]![ahead.c]! !== '#' && !seen.has(toKey(ahead))) {
-      seen.add(toKey(ahead))
-      q.push({ position: ahead, facing: next!.facing, score: next!.score + 1 })
+    let ahead = step(current.position, current.facing)
+    if (input[ahead.r]![ahead.c]! !== '#') {
+      parent[toKey(current.position)]!.push([ahead, current.score + 1])
+      q.push({
+        position: ahead,
+        facing: current.facing,
+        score: current.score + 1
+      })
     }
     q.sort((a, b) => a.score - b.score) // poor man's min heap
   }
-  return minimum(scores)
+  return parent
 }
 
 export function partOne(input: Input) {
-  const [start] = getStart(input)
-  return getBestPathScore(start, input)
-}
-
-function reachEndIn(
-  position: Position,
-  facing: Facing,
-  seen: Record<string, boolean>,
-  score: number,
-  maxScore: number,
-  input: Input
-): Record<string, boolean> | null {
-  if (score > maxScore) {
-    return null
-  }
-
-  if (input[position.r]![position.c]! === 'E' && score === maxScore) {
-    return seen
-  }
-
-  const ccw = turnLeft(facing)
-  const ccwAndAhead = step(position, ccw)
-  const cw = turnRight(facing)
-  const cwAndAhead = step(position, cw)
-  let ahead = step(position, facing)
-
-  let newSeen = { ...seen }
-
-  if (
-    input[ccwAndAhead.r]![ccwAndAhead.c] !== '#' &&
-    seen[toKey(ccwAndAhead)] == null
-  ) {
-    const res = reachEndIn(
-      ccwAndAhead,
-      ccw,
-      { ...seen, [toKey(ccwAndAhead)]: true },
-      score + 1001,
-      maxScore,
-      input
-    )
-    if (res != null) {
-      newSeen = { ...newSeen, ...res }
-    }
-  }
-
-  if (
-    input[cwAndAhead.r]![cwAndAhead.c] !== '#' &&
-    seen[toKey(cwAndAhead)] == null
-  ) {
-    const res = reachEndIn(
-      cwAndAhead,
-      cw,
-      { ...seen, [toKey(cwAndAhead)]: true },
-      score + 1001,
-      maxScore,
-      input
-    )
-    if (res != null) {
-      newSeen = { ...newSeen, ...res }
-    }
-  }
-
-  if (input[ahead.r]![ahead.c] !== '#' && seen[toKey(ccwAndAhead)] == null) {
-    const res = reachEndIn(
-      ahead,
-      facing,
-      { ...seen, [toKey(ahead)]: true },
-      score + 1001,
-      maxScore,
-      input
-    )
-    if (res != null) {
-      newSeen = { ...newSeen, ...res }
-    }
-  }
-
-  if (seen == newSeen) {
-    return null
-  }
-
-  return newSeen
+  const [start, end] = getStart(input)
+  const parent = getBestPathScore(start, input)
+  return pipe(
+    Object.values(parent),
+    Array.flatMap(v => v),
+    Array.filter(([p, _]) => p.c === end.c && p.r === end.r),
+    Array.map(([_, s]) => s),
+    minimum
+  )
 }
 
 export function partTwo(input: Input) {
-  // const [start] = getStart(input)
-  // const bestPathScore = getBestPathScore(start, input)
-  // const seats = reachEndIn(
-  //   start,
-  //   RIGHT,
-  //   { [toKey(start)]: true },
-  //   0,
-  //   bestPathScore,
-  //   input
-  // )
-  // return Object.keys(seats!).length
+  const [start, end] = getStart(input)
+  const parent = getBestPathScore(start, input)
+  console.log(
+    Object.values(parent)
+      .flat()
+      .filter(([p]) => p.c === end.c && p.r === end.r).length
+  )
 }
