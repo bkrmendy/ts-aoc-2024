@@ -44,60 +44,43 @@ function run(machine: Machine): number[] {
 
   while (iptr < machine.instrs.length) {
     const instr = machine.instrs.at(iptr)!
+    const op = machine.instrs.at(iptr + 1)!
+    iptr += 2
     switch (instr) {
       case 0: {
-        current.ra = Math.floor(
-          current.ra / Math.pow(2, combo(machine.instrs.at(iptr + 1)!))
-        )
-        iptr += 2
+        current.ra = Math.floor(current.ra / Math.pow(2, combo(op)))
         break
       }
       case 1: {
-        current.rb = xor(current.rb, machine.instrs.at(iptr + 1)!)
-        iptr += 2
+        current.rb = xor(current.rb, op)
         break
       }
       case 2: {
-        current.rb = combo(machine.instrs.at(iptr + 1)!) % 8
-        iptr += 2
+        current.rb = combo(op) % 8
         break
       }
       case 3: {
         if (current.ra == 0) {
-          iptr += 2
+          // iptr was already advanced
         } else {
-          iptr = machine.instrs.at(iptr + 1)!
+          iptr = op
         }
         break
       }
       case 4: {
-        const brb = current.rb
-        const brc = current.rc
         current.rb = xor(current.rb, current.rc)
-        if (current.ra < 0 || current.rb < 0 || current.rc < 0) {
-          console.log('>>>', iptr, instr, brb, brc, current.rb, current.rc)
-          return []
-        }
-        iptr += 2
         break
       }
       case 5: {
-        outputs.push(combo(machine.instrs.at(iptr + 1)!) % 8)
-        iptr += 2
+        outputs.push(combo(op) % 8)
         break
       }
       case 6: {
-        current.rb = Math.floor(
-          current.ra / Math.pow(2, combo(machine.instrs.at(iptr + 1)!))
-        )
-        iptr += 2
+        current.rb = Math.floor(current.ra / Math.pow(2, combo(op)))
         break
       }
       case 7: {
-        current.rc = Math.floor(
-          current.ra / Math.pow(2, combo(machine.instrs.at(iptr + 1)!))
-        )
-        iptr += 2
+        current.rc = Math.floor(current.ra / Math.pow(2, combo(op)))
         break
       }
     }
@@ -121,9 +104,7 @@ function* generateA(program: number[], output: number[]): Iterable<number> {
     for (let al = 0; al < 8; al++) {
       const a = ah * 8 + al
       const result = run({ ra: a, rb: 0, rc: 0, instrs: program })
-      console.log(output.length, result)
       if (numericArrayEqual(result, output)) {
-        console.log('>>>', output.length, a)
         yield a
       }
     }
