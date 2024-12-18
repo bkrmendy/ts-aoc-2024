@@ -1,4 +1,4 @@
-import { lines } from '@/advent'
+import { lines, minimum, numericArrayEqual } from '@/advent'
 
 interface Machine {
   ra: number
@@ -110,19 +110,26 @@ export function partOne(input: Input) {
   return run(input)
 }
 
-export function partTwo(input: Input) {
-  let ra = 0
-  let is = input.instrs.toReversed()
-  for (const i of is) {
-    ra = ra * 8 + i
+// thanks E
+function* generateA(program: number[], output: number[]): Iterable<number> {
+  if (output.length == 0) {
+    yield 0
+    return
   }
-  return ra
+
+  for (const ah of generateA(program, output.slice(1))) {
+    for (let al = 0; al < 8; al++) {
+      const a = ah * 8 + al
+      const result = run({ ra: a, rb: 0, rc: 0, instrs: program })
+      console.log(output.length, result)
+      if (numericArrayEqual(result, output)) {
+        console.log('>>>', output.length, a)
+        yield a
+      }
+    }
+  }
 }
 
-// export function partTwo(input: Input) {
-//   const program = input.instrs.join(',')
-//   input.ra = 175657454975814
-//   const res = run(input)
-//   console.log(program)
-//   console.log(res.join(','))
-// }
+export function partTwo(input: Input) {
+  return minimum([...generateA(input.instrs, input.instrs)])
+}
