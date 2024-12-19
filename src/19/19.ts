@@ -10,34 +10,24 @@ type Input = ReturnType<typeof parse>
 
 const possible = memo(
   (_, d) => d,
-  (patterns: string[], design: string): number => {
-    if (design.length === 0) {
-      return 1
-    }
-
-    return pipe(
-      patterns,
-      Array.filter(p => design.startsWith(p)),
-      Array.map(p => possible(patterns, design.slice(p.length))),
-      sum
-    )
-  }
+  (patterns: string[], design: string): number =>
+    design.length === 0
+      ? 1
+      : pipe(
+          patterns,
+          Array.filter(p => design.startsWith(p)),
+          Array.map(p => possible(patterns, design.slice(p.length))),
+          sum
+        )
 )
 
-export function partOne(input: Input) {
-  return pipe(
+const solve = (result: (_: number[]) => number) => (input: Input) =>
+  pipe(
     input.designs,
     Array.map(d => possible(input.patterns, d)),
     Array.filter(a => a != null),
-    Array.length
+    result
   )
-}
 
-export function partTwo(input: Input) {
-  return pipe(
-    input.designs,
-    Array.map(d => possible(input.patterns, d)),
-    Array.filter(a => a != null),
-    sum
-  )
-}
+export const partOne = solve(_ => _.length)
+export const partTwo = solve(sum)
