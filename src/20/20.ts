@@ -1,17 +1,5 @@
 import { lines } from '@/advent'
-import {
-  DOWN,
-  fromKey,
-  getBounds,
-  LEFT,
-  neighborsViaEdge,
-  Position,
-  RIGHT,
-  step,
-  toKey,
-  UP
-} from '@/move2d'
-import { pipe, Array } from 'effect'
+import { getBounds, neighborsViaEdge, Position, toKey } from '@/move2d'
 
 export function parse(input: string) {
   return lines(input).map(l => [...l])
@@ -39,56 +27,69 @@ type Input = ReturnType<typeof parse>
 function walk(
   grid: string[][],
   [start, end]: [Position, Position]
-): [Position, number][] | null {
+): [Position, number][] {
   let bounds = getBounds(grid)
-  let q: [Position, number][] = [[start, 0]]
-  let seen: Set<string> = new Set([toKey(start)])
+  let time = 0
+  let current = start
+  let seen: Set<string> = new Set()
   let path: [Position, number][] = []
-  while (true) {
-    let [pos, time] = q.shift()!
-    path.push([pos, time])
-    if (pos.r === end.r && pos.c === end.c) {
-      return path
-    }
-    for (const n of neighborsViaEdge(pos, bounds)) {
-      if (!seen.has(toKey(n)) && grid[n.r]![n.c] !== '#') {
-        q.push([n, time + 1])
-      }
-      seen.add(toKey(n))
-    }
+
+  while (toKey(current) !== toKey(end)) {
+    path.push([current, time])
+    seen.add(toKey(current))
+    time += 1
+    current = neighborsViaEdge(current, bounds).find(
+      n => grid[n.r]![n.c] !== '#' && !seen.has(toKey(n))
+    )!
   }
+  return path
 }
 
 const moveCheat =
   (steps: number) =>
-  (grid: string[][], from: Position): Position[] => {
-    let result: Position[] = []
+  (grid: string[][], from: Position): [Position, number][] => {
+    let result: [Position, number][] = []
 
-    const deltas = [UP, DOWN, LEFT, RIGHT]
-    let q = deltas.map(d => step(from, d)).filter(p => grid[p.r]?.[p.c] === '#').map(p => [p, steps - 1])
-    for (const d of deltas) {
-      const next = step(from, d)
-      if (grid[next.r]?.[next.c] === '#') {
-        const nn = step(next, d)
-        if (grid[nn.r]?.[nn.c] !== '#') {
-          result.push(nn)
+    const bounds = getBounds(grid)
+    let q: [Position, number][] = [[from, 0]]
+    let seen: Set<string> = new Set([toKey(from)])
+
+    while (q.length > 0) {
+      let [p, s] = q.shift()!
+      if (s > steps) {
+        continue
+      }
+
+      if (grid[p.r]![p.c]! !== '#') {
+        result.push([p, s])
+      }
+
+      for (const n of neighborsViaEdge(p, bounds)) {
+        if (!seen.has(toKey(n))) {
+          seen.add(toKey(n))
+          q.push([n, s + 1])
         }
       }
     }
+
     return result
   }
 
 function cheats(
   grid: string[][],
   path: [Position, number][],
-  cheat: (grid: string[][], from: Position) => Position[]
+  cheat: (grid: string[][], from: Position) => [Position, number][]
 ) {
-  let result: number[] = []
-  for (let [i, [p, t]] of path.entries()) {
-    const moves = new Set(cheat(grid, p).map(toKey))
-    for (let [p2, t2] of path.slice(i + 1)) {
-      if (moves.has(toKey(p2))) {
-        result.push(t2 - t - 2)
+  let result: Record<string, number> = {}
+  let times: Record<string, number> = {}
+  path.forEach(([p, t]) => (times[toKey(p)] = t))
+
+  for (let [p] of path) {
+    for (const [move, shortcut] of cheat(grid, p)) {
+      const from = times[toKey(p)]!
+      const to = times[toKey(move)]!
+      if (from < to) {
+        result[`${toKey(p)}~${toKey(move)}`] = to - from - shortcut
       }
     }
   }
@@ -100,7 +101,7 @@ const solve = (steps: number) => (input: Input) => {
   const path = walk(input, [start, end])!
   const chs = cheats(input, path, moveCheat(steps))
 
-  return chs.filter(c => c >= 100).length
+  return Object.values(chs).filter(c => c >= 100).length
 }
 
 export const partOne = solve(2)
