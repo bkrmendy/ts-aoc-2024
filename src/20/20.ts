@@ -27,17 +27,15 @@ type Input = ReturnType<typeof parse>
 function walk(
   grid: string[][],
   [start, end]: [Position, Position]
-): [Position, number][] {
+): Position[] {
   let bounds = getBounds(grid)
-  let time = 0
   let current = start
   let seen: Set<string> = new Set()
-  let path: [Position, number][] = []
+  let path: Position[] = []
 
   while (toKey(current) !== toKey(end)) {
-    path.push([current, time])
+    path.push(current)
     seen.add(toKey(current))
-    time += 1
     current = neighborsViaEdge(current, bounds).find(
       n => grid[n.r]![n.c] !== '#' && !seen.has(toKey(n))
     )!
@@ -47,8 +45,8 @@ function walk(
 
 const moveCheat =
   (steps: number) =>
-  (grid: string[][], from: Position): [Position, number][] => {
-    let result: [Position, number][] = []
+  (grid: string[][], from: Position): Position[] => {
+    let result: Position[] = []
 
     const bounds = getBounds(grid)
     let q: [Position, number][] = [[from, 0]]
@@ -61,7 +59,7 @@ const moveCheat =
       }
 
       if (grid[p.r]![p.c]! !== '#') {
-        result.push([p, s])
+        result.push(p)
       }
 
       for (const n of neighborsViaEdge(p, bounds)) {
@@ -77,17 +75,18 @@ const moveCheat =
 
 function cheats(
   grid: string[][],
-  path: [Position, number][],
-  cheat: (grid: string[][], from: Position) => [Position, number][]
+  path: Position[],
+  cheat: (grid: string[][], from: Position) => Position[]
 ) {
   let result: Record<string, number> = {}
   let times: Record<string, number> = {}
-  path.forEach(([p, t]) => (times[toKey(p)] = t))
+  path.forEach((p, t) => (times[toKey(p)] = t))
 
-  for (let [p] of path) {
-    for (const [move, shortcut] of cheat(grid, p)) {
+  for (let p of path) {
+    for (const move of cheat(grid, p)) {
       const from = times[toKey(p)]!
       const to = times[toKey(move)]!
+      const shortcut = Math.abs(p.r - move.r) + Math.abs(p.c - move.c)
       if (from < to) {
         result[`${toKey(p)}~${toKey(move)}`] = to - from - shortcut
       }
