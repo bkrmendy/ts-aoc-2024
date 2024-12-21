@@ -78,7 +78,7 @@ function cheats(
   path: Position[],
   cheat: (grid: string[][], from: Position) => Position[]
 ) {
-  let result: Record<string, number> = {}
+  let result: number[] = []
   let times: Record<string, number> = {}
   path.forEach((p, t) => (times[toKey(p)] = t))
 
@@ -88,7 +88,7 @@ function cheats(
       const to = times[toKey(move)]!
       const shortcut = Math.abs(p.r - move.r) + Math.abs(p.c - move.c)
       if (from < to) {
-        result[`${toKey(p)}~${toKey(move)}`] = to - from - shortcut
+        result.push(to - from - shortcut)
       }
     }
   }
@@ -100,7 +100,7 @@ const solve = (steps: number) => (input: Input) => {
   const path = walk(input, [start, end])!
   const chs = cheats(input, path, moveCheat(steps))
 
-  return Object.values(chs).filter(c => c >= 100).length
+  return chs.filter(c => c >= 100).length
 }
 
 export const partOne = solve(2)
