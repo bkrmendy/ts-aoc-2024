@@ -10,9 +10,11 @@ const xor = (a: number, b: number) => (a ^ b) >>> 0
 const prune = (n: number) => n % 16777216
 
 function evolve(n: number): number {
-  const m64 = prune(xor(n, n * 64))
-  const d32 = prune(xor(m64, Math.floor(m64 / 32)))
-  return prune(xor(d32, d32 * 2048))
+  return [
+    (n: number) => n * 64,
+    (n: number) => Math.floor(n / 32),
+    (n: number) => n * 2048
+  ].reduce((acc, f) => prune(xor(acc, f(acc))), n)
 }
 
 function gen(n: number): number[] {
@@ -41,6 +43,7 @@ function sequenceMap(os: number[]): Record<string, number> {
   let iw = 4
   for (const w of window(4, cs)) {
     const seq = w.join(',')
+    // the monkey will sell the first time it sees the sequence
     if (map[seq] == null) {
       map[seq] = os.at(iw)!
     }
@@ -62,12 +65,9 @@ export function partTwo(input: Input) {
     sequenceMappings.flatMap(s => Object.keys(s))
   )
 
-  const h = pipe(
+  return pipe(
     [...allSequences.values()],
     Array.map(seq => sum(sequenceMappings.map(s => s[seq] ?? 0))),
     maximum
   )
-
-  console.log(h)
-  return h
 }
