@@ -34,23 +34,14 @@ export function partOne(input: Input) {
   )
 }
 
-function ones(secrets: number[]): number[] {
-  return secrets.map(s => s % 10)
-}
-
-function changes(ns: number[]): number[] {
-  return Array.zipWith(ns, ns.slice(1), (a, b) => b - a)
-}
-
-function sequenceMap(ns: number[]): Record<string, number> {
-  const os = ones(ns)
-  const cs = changes(os)
+function sequenceMap(os: number[]): Record<string, number> {
+  const cs = Array.zipWith(os, os.slice(1), (a, b) => b - a)
 
   let map: Record<string, number> = {}
   let iw = 4
   for (const w of window(4, cs)) {
     const seq = w.join(',')
-    if (map[seq] == null || map[seq] < os.at(iw)!) {
+    if (map[seq] == null) {
       map[seq] = os.at(iw)!
     }
     iw += 1
@@ -59,24 +50,24 @@ function sequenceMap(ns: number[]): Record<string, number> {
 }
 
 export function partTwo(input: Input) {
-  const sequenceMappings = input.map(gen).map(sequenceMap)
-  const allSequences: Set<string> = new Set()
-  for (const s of sequenceMappings) {
-    for (const k of Object.keys(s)) {
-      allSequences.add(k)
-    }
-  }
+  const sequenceMappings = input.map(i =>
+    pipe(
+      i,
+      gen,
+      Array.map(n => n % 10),
+      sequenceMap
+    )
+  )
+  const allSequences: Set<string> = new Set(
+    sequenceMappings.flatMap(s => Object.keys(s))
+  )
 
-  let max: { seq: string; val: number } | null = null
-  let i = 1
-  for (const seq of allSequences) {
-    console.log(i, '/', allSequences.size)
-    i++
-    const total = sum(sequenceMappings.map(s => s[seq] ?? 0))
-    if (max == null || max.val < total) {
-      max = { seq, val: total }
-    }
-  }
-  console.log(max)
-  return max!.val
+  const h = pipe(
+    [...allSequences.values()],
+    Array.map(seq => sum(sequenceMappings.map(s => s[seq] ?? 0))),
+    maximum
+  )
+
+  console.log(h)
+  return h
 }
