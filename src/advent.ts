@@ -150,3 +150,9 @@ export const mod = (n: number, m: number) => {
 export function assertNever(n: never): never {
   throw new Error(`Expected never, got: ${JSON.stringify(n)}`)
 }
+
+export function* window<T>(size: number, ts: T[]): IterableIterator<T[]> {
+  for (let i = 0; i < ts.length - size; i++) {
+    yield ts.slice(i, i + size)
+  }
+}
