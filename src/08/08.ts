@@ -63,7 +63,7 @@ function interferences2(input: Input, p1: Position, p2: Position): Position[] {
   return [...behind, ...ahead]
 }
 
-function solve(input: Input, dpi: Interferences) {
+const solve = (dpi: Interferences) => (input: Input) => {
   return pipe(
     input,
     getUniqueFrequencies,
@@ -80,5 +80,5 @@ function solve(input: Input, dpi: Interferences) {
   )
 }
 
-export const partOne = (input: Input) => solve(input, interferences1)
-export const partTwo = (input: Input) => solve(input, interferences2)
+export const partOne = solve(interferences1)
+export const partTwo = solve(interferences2)
