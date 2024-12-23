@@ -33,8 +33,9 @@ export function intersection<T>(a: Set<T>, b: Set<T>) {
 }
 
 export function union<T>(a: Set<T>, b: Set<T>) {
-  b.values().forEach(item => a.add(item))
-  return a
+  let result = new Set([...a])
+  b.values().forEach(item => result.add(item))
+  return result
 }
 
 export function maximum(numbers: number[]) {
