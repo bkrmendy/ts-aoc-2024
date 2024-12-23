@@ -5,14 +5,8 @@ export function parse(input: string): Record<string, string[]> {
   let result: Record<string, string[]> = {}
   for (const line of lines(input)) {
     const [from, to] = line.split('-') as [string, string]
-    if (result[from] == null) {
-      result[from] = []
-    }
-    result[from].push(to)
-    if (result[to] == null) {
-      result[to] = []
-    }
-    result[to].push(from)
+    result[from] = (result[from] || []).concat(to)
+    result[to] = (result[to] || []).concat(from)
   }
   return result
 }
