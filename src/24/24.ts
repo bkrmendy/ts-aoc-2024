@@ -76,13 +76,10 @@ const wiresWithPrefix = (
     .map(([_, v]) => v)
 
 export function partOne(input: Input) {
-  console.log(input.values)
-  console.log(input.gates)
   const values = simulate(input.values, input.gates)
 
   const xs = wiresWithPrefix(values, 'x')
   const ys = wiresWithPrefix(values, 'y')
-  console.log(output(xs) + output(ys))
   const zs = wiresWithPrefix(values, 'z')
 
   return output(zs)
