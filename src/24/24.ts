@@ -1,4 +1,4 @@
-import { pipe } from 'effect'
+import { Array, Order, pipe } from 'effect'
 import { assertNever, lines } from '../advent'
 
 type Op = 'AND' | 'OR' | 'XOR'
@@ -84,4 +84,49 @@ export function partOne(input: Input) {
   )
 }
 
-export function partTwo(input: Input) {}
+const p2output = (wires: string[]) =>
+  pipe(wires, Array.sort(Order.string), Array.join(','))
+
+export function partTwo(input: Input) {
+  let swapped: Set<string> = new Set()
+
+  // TODO post-🎄: comment this
+  input.gates.forEach(gate => {
+    if (gate.dst.startsWith('z') && gate.op !== 'XOR' && gate.dst !== 'z45') {
+      swapped.add(gate.dst)
+    }
+
+    if (
+      gate.op === 'XOR' &&
+      !['x', 'y', 'z'].includes(gate.dst[0]!) &&
+      !['x', 'y', 'z'].includes(gate.a[0]!) &&
+      !['x', 'y', 'z'].includes(gate.b[0]!)
+    ) {
+      swapped.add(gate.dst)
+    }
+
+    if (gate.op === 'AND' && ![gate.a, gate.b].includes('x00')) {
+      input.gates.forEach(other => {
+        if (
+          (gate.dst === other.a || gate.dst === other.b) &&
+          other.op !== 'OR'
+        ) {
+          swapped.add(gate.dst)
+        }
+      })
+    }
+
+    if (gate.op === 'XOR') {
+      input.gates.forEach(other => {
+        if (
+          (gate.dst === other.a || gate.dst === other.b) &&
+          other.op === 'OR'
+        ) {
+          swapped.add(gate.dst)
+        }
+      })
+    }
+  })
+
+  return p2output([...swapped])
+}
