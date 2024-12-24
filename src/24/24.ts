@@ -1,3 +1,4 @@
+import { pipe } from 'effect'
 import { assertNever, lines } from '../advent'
 
 type Op = 'AND' | 'OR' | 'XOR'
@@ -76,13 +77,11 @@ const wiresWithPrefix = (
     .map(([_, v]) => v)
 
 export function partOne(input: Input) {
-  const values = simulate(input.values, input.gates)
-
-  const xs = wiresWithPrefix(values, 'x')
-  const ys = wiresWithPrefix(values, 'y')
-  const zs = wiresWithPrefix(values, 'z')
-
-  return output(zs)
+  return pipe(
+    simulate(input.values, input.gates),
+    ws => wiresWithPrefix(ws, 'z'),
+    output
+  )
 }
 
 export function partTwo(input: Input) {}
