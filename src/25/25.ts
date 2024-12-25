@@ -1,5 +1,4 @@
 import { lines, transpose } from '@/advent'
-import { toKey } from '@/move2d'
 import { Array, pipe } from 'effect'
 
 export const parse = (input: string) =>
@@ -7,20 +6,18 @@ export const parse = (input: string) =>
 
 type Input = ReturnType<typeof parse>
 
-const isLock = (schematic: string[][]) =>
-  schematic.at(0)!.every(i => i === '#') &&
-  schematic.at(-1)!.every(i => i === '.')
-
-const isKey = (schematic: string[][]) =>
-  schematic.at(0)!.every(i => i === '.') &&
-  schematic.at(-1)!.every(i => i === '#')
+const isType =
+  ({ upper, lower }: { upper: string; lower: string }) =>
+  (schematic: string[][]) =>
+    schematic.at(0)!.every(i => i === upper) &&
+    schematic.at(-1)!.every(i => i === lower)
 
 const toHeights = (schematic: string[][]) =>
   transpose(schematic).map(c => c.filter(a => a === '#').length - 1)
 
 export function partOne(input: Input) {
-  const locks = input.filter(isLock).map(toHeights)
-  const keys = input.filter(isKey).map(toHeights)
+  const locks = input.filter(isType({ upper: '#', lower: '.' })).map(toHeights)
+  const keys = input.filter(isType({ upper: '.', lower: '#' })).map(toHeights)
 
   let result: number = 0
   for (const lock of locks) {
