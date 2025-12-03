@@ -27,14 +27,20 @@ export const partOne = solve(i => {
   return n === start.repeat(2)
 })
 
-export const partTwo = solve(i => {
-  const n = i.toString()
-  return pipe(
-    Array.range(1, n.length / 2),
-    Array.findFirst(upTo => {
-      const start = n.slice(0, upTo)
-      return n === start.repeat(n.length / upTo)
-    }),
-    Option.isSome
-  )
-})
+export const partTwo = (input: Input) => {
+  let result = 0
+  for (const [from, to] of input) {
+    const invalid = new Set<number>()
+    for (let i = from; i <= to; i++) {
+      const n = i.toString()
+      for (let upto = 1; upto <= n.length / 2; upto++) {
+        const start = n.slice(0, upto)
+        if (n === start.repeat(n.length / upto)) {
+          invalid.add(i)
+        }
+      }
+    }
+    result += sum([...invalid])
+  }
+  return result
+}
