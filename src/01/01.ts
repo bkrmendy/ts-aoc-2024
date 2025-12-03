@@ -13,7 +13,7 @@ export const parse = (input: string) =>
 type Input = ReturnType<typeof parse>
 
 const solve =
-  (fn: (current: number, rotation: number) => number) => (input: number[]) => {
+  (fn: (current: number, rotation: number) => number) => (input: Input) => {
     let result = 0
     let current = 50
     for (const rotation of input) {
