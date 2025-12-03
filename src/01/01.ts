@@ -1,25 +1,38 @@
-import { lines, sum, words } from '@/advent'
-import { pipe, Array } from 'effect'
+import { lines } from '@/advent'
+import { Array, pipe } from 'effect'
 
-export function parse(input: string): [number[], number[]] {
-  const rows = lines(input).map(l => words(l).map(Number))
-  return [rows.map(r => r.at(0)!).sort(), rows.map(r => r.at(1)!).sort()]
-}
+export const parse = (input: string) =>
+  pipe(
+    lines(input),
+    Array.map(line => {
+      const amount = parseInt(line.slice(1), 10)
+      return line[0] === 'L' ? -amount : amount
+    })
+  )
 
 type Input = ReturnType<typeof parse>
 
-export function partOne(input: Input) {
-  const [f, s] = input
-  return pipe(
-    Array.zip(f, s),
-    Array.map(([a, b]) => Math.abs(a - b)),
-    sum
-  )
-}
+const solve =
+  (fn: (current: number, rotation: number) => number) => (input: number[]) => {
+    let result = 0
+    let current = 50
+    for (const rotation of input) {
+      result += fn(current, rotation)
+      current += rotation
+    }
+    return result
+  }
 
-export function partTwo(input: Input) {
-  const [f, s] = input
-  let sCounts: Record<string, number> = {}
-  s.forEach(val => (sCounts[val] = (sCounts[val] ?? 0) + 1))
-  return sum(f.map(n => n * (sCounts[n] ?? 0)))
-}
+export const partOne = solve((current, rotation) =>
+  (current + rotation) % 100 === 0 ? 1 : 0
+)
+
+export const partTwo = solve((current, rotation) => {
+  let c = 0
+  for (let i = 0; i < Math.abs(rotation); i++) {
+    if ((current + i * Math.sign(rotation)) % 100 === 0) {
+      c += 1
+    }
+  }
+  return c
+})
